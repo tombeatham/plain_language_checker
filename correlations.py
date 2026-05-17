@@ -102,3 +102,24 @@ r12, _           = spearmanr(model.predict(aligned[["cov_5k", "sent_length"]]), 
 
 z, p_sz = steiger_z(rho_composite, rho_flesch, r12, n)
 print(f"\nSteiger Z (composite vs Flesch): z={z:.3f}, p={p_sz:.3f} (n={n})")
+
+# Per-category correlations
+def corr_table(df, label):
+    target = df["BT_easiness"]
+    composite_pred = model.predict(df[["cov_5k", "sent_length"]].fillna(df[["cov_5k", "sent_length"]].mean()))
+    measures = {
+        "Flesch-Reading-Ease": df["Flesch-Reading-Ease"],
+        "Coverage top-5k":     df["cov_5k"],
+        "Mean Zipf":           df["mean_zipf"],
+        "Composite":           pd.Series(composite_pred, index=df.index),
+    }
+    rows = []
+    for name, col in measures.items():
+        mask = target.notna() & col.notna()
+        rho, p = spearmanr(target[mask], col[mask])
+        rows.append({"Measure": name, "rho": round(rho, 4), "p-value": f"{p:.2e}", "n": int(mask.sum())})
+    print(f"\n--- {label} ---")
+    print(pd.DataFrame(rows).to_string(index=False))
+
+for label, categ in [("Lit", "Lit"), ("Info", "Info")]:
+    corr_table(corpus[corpus["Categ"] == categ], label)
