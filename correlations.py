@@ -1,0 +1,104 @@
+import numpy as np
+import pandas as pd
+import spacy
+from scipy.stats import norm, spearmanr
+from sklearn.linear_model import LinearRegression
+
+
+def steiger_z(r1, r2, r12, n):
+    """
+    r1: correlation of model 1 with criterion
+    r2: correlation of model 2 with criterion
+    r12: correlation between model 1 predictions and model 2 predictions
+    n: sample size
+    """
+    z1 = np.arctanh(r1)
+    z2 = np.arctanh(r2)
+    r_avg = (r1 + r2) / 2
+    f = (1 - r12) / (2 * (1 - r_avg**2))
+    SE = np.sqrt(1/(n-3) * (1 + f*(1 - 2*r_avg**2*(1-r12))))
+    z = (z1 - z2) / SE
+    p = 2 * (1 - norm.cdf(abs(z)))
+    return z, p
+
+# Load data
+corpus = pd.read_csv("CLEAR_corpus_final.csv", encoding="latin-1")
+subtlex = pd.read_csv("SUBTLEX-UK.csv", encoding="latin-1")
+
+# Build Zipf lookup: lowercase word -> Zipf score
+subtlex["word"] = subtlex["Spelling"].str.lower()
+zipf_map = subtlex.set_index("word")["LogFreq(Zipf)"].to_dict()
+
+# Rank words by Zipf descending; top-N sets
+subtlex_sorted = subtlex.sort_values("LogFreq(Zipf)", ascending=False).reset_index(drop=True)
+top3k  = set(subtlex_sorted["word"].iloc[:3000])
+top5k  = set(subtlex_sorted["word"].iloc[:5000])
+top10k = set(subtlex_sorted["word"].iloc[:10000])
+
+nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
+
+def lemmatize(text):
+    doc = nlp(str(text))
+    return [t.lemma_.lower() for t in doc if t.is_alpha]
+
+def coverage(tokens, word_set):
+    if not tokens:
+        return float("nan")
+    return sum(t in word_set for t in tokens) / len(tokens)
+
+def mean_zipf(tokens):
+    scores = [zipf_map[t] for t in tokens if t in zipf_map]
+    return sum(scores) / len(scores) if scores else float("nan")
+
+# Compute features per excerpt (batch via nlp.pipe for speed)
+tokens_col = pd.Series(
+    list(nlp.pipe(corpus["Excerpt"].astype(str), batch_size=64)),
+    index=corpus.index,
+).map(lambda doc: [t.lemma_.lower() for t in doc if t.is_alpha])
+corpus["cov_3k"]     = tokens_col.map(lambda t: coverage(t, top3k))
+corpus["cov_5k"]     = tokens_col.map(lambda t: coverage(t, top5k))
+corpus["cov_10k"]    = tokens_col.map(lambda t: coverage(t, top10k))
+corpus["mean_zipf"]  = tokens_col.map(mean_zipf)
+
+# Spearman correlations against BT_easiness
+target = corpus["BT_easiness"]
+measures = {
+    "Flesch-Reading-Ease": corpus["Flesch-Reading-Ease"],
+    "Coverage top-3k":     corpus["cov_3k"],
+    "Coverage top-5k":     corpus["cov_5k"],
+    "Coverage top-10k":    corpus["cov_10k"],
+    "Mean Zipf":           corpus["mean_zipf"],
+}
+
+rows = []
+for name, col in measures.items():
+    mask = target.notna() & col.notna()
+    rho, p = spearmanr(target[mask], col[mask])
+    rows.append({"Measure": name, "rho": round(rho, 4), "p-value": f"{p:.2e}"})
+
+print(pd.DataFrame(rows).to_string(index=False))
+
+# Combined model: coverage_5k + mean sentence length
+corpus["sent_length"] = corpus["Excerpt"].apply(
+    lambda x: np.mean([len(s.split()) for s in str(x).split(".") if s.strip()])
+)
+
+X = corpus[["cov_5k", "sent_length"]].dropna()
+y = corpus.loc[X.index, "BT_easiness"].dropna()
+X = X.loc[y.index]
+
+model = LinearRegression().fit(X, y)
+predicted = model.predict(X)
+rho, p = spearmanr(predicted, y)
+print(f"\nSUBTLEX composite (coverage_5k + sent_length): rho={rho:.3f}, p={p:.2e}")
+
+# Steiger Z: composite vs Flesch on the same aligned sample
+aligned = corpus[["BT_easiness", "Flesch-Reading-Ease", "cov_5k", "sent_length"]].dropna()
+n = len(aligned)
+
+rho_composite, _ = spearmanr(model.predict(aligned[["cov_5k", "sent_length"]]), aligned["BT_easiness"])
+rho_flesch, _    = spearmanr(aligned["Flesch-Reading-Ease"], aligned["BT_easiness"])
+r12, _           = spearmanr(model.predict(aligned[["cov_5k", "sent_length"]]), aligned["Flesch-Reading-Ease"])
+
+z, p_sz = steiger_z(rho_composite, rho_flesch, r12, n)
+print(f"\nSteiger Z (composite vs Flesch): z={z:.3f}, p={p_sz:.3f} (n={n})")
