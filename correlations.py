@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import spacy
+import textstat
 from scipy.stats import norm, spearmanr
 from sklearn.linear_model import LinearRegression
 
@@ -123,3 +124,21 @@ def corr_table(df, label):
 
 for label, categ in [("Lit", "Lit"), ("Info", "Info")]:
     corr_table(corpus[corpus["Categ"] == categ], label)
+
+# Error asymmetry: syllable-based vs frequency-based word difficulty
+corpus["false_positives"] = corpus["Excerpt"].apply(
+    lambda x: sum(1 for w in x.split()
+    if textstat.syllable_count(w) >= 3
+    and w.lower() in top5k) / len(x.split())
+)
+
+corpus["false_negatives"] = corpus["Excerpt"].apply(
+    lambda x: sum(1 for w in x.split()
+    if textstat.syllable_count(w) <= 2
+    and w.lower() not in top5k) / len(x.split())
+)
+
+corpus["error_asymmetry"] = corpus["false_positives"] - corpus["false_negatives"]
+
+rho, p = spearmanr(corpus["error_asymmetry"].dropna(), corpus.loc[corpus["error_asymmetry"].notna(), "BT_easiness"])
+print(f"\nError asymmetry vs BT_easiness: rho={rho:.3f}, p={p:.4f}")
