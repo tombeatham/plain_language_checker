@@ -99,7 +99,23 @@ AoA catches false negatives that frequency misses — high-frequency but late-ac
 - No human-rated corpus of administrative prose exists. CLEAR is literary/informative text rated by trained teachers for student readers — not general adult readers of official correspondence.
 - Kuperman AoA is American English (Mechanical Turk raters). No British AoA database exists at scale.
 - The American/British calibration issue is real but modest for common vocabulary. The divergent words are mostly political/civic terms (coalition, austerity, referendum) and nursery words absent from HOS decisions.
-- AoA has an adverb gap — Kuperman covers nouns, verbs, adjectives. Adverbs are mostly absent. SUBTLEX-UK fallback covers this.
+- AoA has an adverb gap — Kuperman covers nouns, verbs, adjectives. Adverbs are mostly absent. Partially addressed by the 2025 ECP supplement (see below).
+
+### 2025 Kuperman extension (Brysbaert et al.)
+
+A 2025 paper extends the Kuperman norms. Three files are in the repo:
+
+| File | Words | Type |
+|---|---|---|
+| `Crowdsourced Print AoA Estimates for Earlier Acquired Vocabulary (Study 1).xlsx` | 11,074 | Human-rated (crowdsourced) |
+| `AI_Generated_AoA_Kuperman_2012.xlsx` | 28,054 | AI-generated (fine-tuned GPT-4o) |
+| `AI_Generated_AoA_ECP.xlsx` | 25,076 | AI-generated (fine-tuned GPT-4o) |
+
+Study 1 covers only early-acquired words (AoA < 10) — all below the flagging threshold, so no new flaggable words.
+
+The ECP supplement adds **4,042 words not in Kuperman**, of which **334 appear in the CLEAR corpus with AoA > 10** (newly flaggable). Top examples: `moreover` (11.0), `nevertheless` (11.0), `consequently` (11.0), `comparatively` (11.0), `levy` (12.0), `stakeholder` (13.0).
+
+**Caution**: ECP AoA values cluster at round numbers (11.0, 12.0, 13.0) — the model rounds rather than producing calibrated estimates. Use these, but flag them as AI-generated in the tool data, separate from human-rated Kuperman values.
 
 ---
 
@@ -117,6 +133,7 @@ AoA catches false negatives that frequency misses — high-frequency but late-ac
 
 - van Heuven, W. J. B., Mandera, P., Keuleers, E., & Brysbaert, M. (2014). SUBTLEX-UK: A new and improved word frequency database for British English. *Quarterly Journal of Experimental Psychology*, 67(6), 1176–1190.
 - Kuperman, V., Stadthagen-Gonzalez, H., & Brysbaert, M. (2012). Age-of-acquisition ratings for 30,000 English words. *Behavior Research Methods*, 44(4), 978–990.
+- Brysbaert, M. et al. (2025). Crowdsourced and AI-generated age-of-acquisition norms for vocabulary in print: Extending the Kuperman et al. (2012) norms. *Behavior Research Methods*. https://pmc.ncbi.nlm.nih.gov/articles/PMC12500800/
 - Crossley, S. A., Heintz, A., Choi, J. S., Batchelor, J., Karimi, M., & Malatinszky, A. (2022). A large-scaled corpus for assessing text readability. *Behavior Research Methods*, 55, 491–507.
 
 ---
@@ -125,17 +142,22 @@ AoA catches false negatives that frequency misses — high-frequency but late-ac
 
 ```
 plain_language_checker/
-├── CLAUDE.md                  ← this file
-├── README.md                  ← public-facing summary
-├── CLEAR_corpus.csv           ← validation corpus (CC BY-NC-SA)
-├── SUBTLEX-UK.xlsx            ← word frequency database
-├── AoA_ratings_Kuperman.xlsx  ← age of acquisition ratings
-├── correlations.py            ← main validation script
-├── scatter_flesch_bt.png      ← scatter plot (session 3)
-├── scatter_flesch_bt.svg      ← scatter plot (SVG)
-├── aoa_lookup.json            ← tool data (session 4)
-├── subtlex_top10k.json        ← tool data (session 4)
-└── index.html                 ← the tool (session 5)
+├── CLAUDE.md                                                              ← this file
+├── README.md                                                              ← public-facing summary
+├── correlations.py                                                        ← main validation script
+├── hos_false_positives.py                                                 ← HOS false positive/negative analysis
+├── scatter_plot.py                                                        ← scatter plot script
+├── scatter_flesch_bt.png                                                  ← scatter plot output
+├── scatter_flesch_bt.svg                                                  ← scatter plot output (SVG)
+│
+├── CLEAR_corpus_final.csv                                                 ← validation corpus (CC BY-NC-SA, not in repo)
+├── SUBTLEX-UK.csv                                                         ← word frequency database (not in repo)
+├── hos_decisions_v5.csv                                                   ← HOS decisions corpus (not in repo)
+│
+├── AoA_51715_words.xlsx                                                   ← Kuperman AoA ratings (not in repo)
+├── Crowdsourced Print AoA Estimates for Earlier Acquired Vocabulary...xlsx ← Brysbaert 2025 Study 1, human-rated (not in repo)
+├── AI_Generated_AoA_Kuperman_2012.xlsx                                    ← Brysbaert 2025 Study 3, AI-generated (not in repo)
+└── AI_Generated_AoA_ECP.xlsx                                              ← Brysbaert 2025 ECP supplement, AI-generated (not in repo)
 ```
 
 ---

@@ -47,7 +47,7 @@ AoA significantly outperforms Flesch (Steiger z=7.91, p<0.001). On informative t
 
 - No human-rated corpus of administrative prose exists. CLEAR is literary and informative text rated by teachers for student readers.
 - Kuperman AoA is American English. No British AoA database exists at scale. The divergence is modest for common vocabulary but real for some civic/political terms.
-- AoA covers approximately 96% of content word tokens in general prose. The remaining 4% (mostly adverbs) falls back to SUBTLEX-UK.
+- AoA covers approximately 96% of content word tokens in general prose. The remaining 4% is mostly adverbs, which Kuperman did not rate. A 2025 extension (Brysbaert et al.) adds AI-generated AoA estimates for a further 4,042 words via the English Crowdsourcing Project; 334 of these appear in the CLEAR corpus above the flagging threshold. These are used in the tool but flagged separately as AI-generated estimates.
 
 ## How it works
 
