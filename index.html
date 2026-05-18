@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plain Language Checker</title>
+<style>
+  body {
+    font-family: Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    max-width: 800px;
+    margin: 48px auto;
+    padding: 0 24px;
+    color: #222;
+  }
+  h1 { font-size: 1.2em; font-weight: normal; color: #666; margin-bottom: 24px; }
+  textarea {
+    width: 100%;
+    height: 180px;
+    font: inherit;
+    border: 1px solid #ccc;
+    padding: 12px;
+    box-sizing: border-box;
+    resize: vertical;
+    color: #222;
+  }
+  textarea:focus { outline: 2px solid #888; border-color: transparent; }
+  #output {
+    margin-top: 24px;
+    padding: 12px;
+    min-height: 60px;
+    border: 1px solid #eee;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  mark {
+    background: #ffe0b2;
+    color: inherit;
+    border-radius: 2px;
+    padding: 0 1px;
+    cursor: help;
+  }
+  mark[data-source="ecp_ai"] { background: #fff3cd; }
+  #status { margin-top: 10px; font-size: 0.85em; color: #888; }
+</style>
+</head>
+<body>
+
+<h1>Plain Language Checker</h1>
+
+<textarea id="input" placeholder="Paste text here…" spellcheck="false"></textarea>
+<div id="status"></div>
+<div id="output"></div>
+
+<script>
+let aoa = null;
+
+fetch('aoa_lookup.json')
+  .then(r => r.json())
+  .then(data => {
+    aoa = data;
+    document.getElementById('status').textContent = '';
+    const input = document.getElementById('input');
+    if (input.value) processInput(input.value);
+  })
+  .catch(() => {
+    document.getElementById('status').textContent =
+      'Could not load aoa_lookup.json — run via a local server, not file://.';
+  });
+
+document.getElementById('status').textContent = 'Loading word data…';
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function processInput(text) {
+  if (!aoa) return;
+
+  const parts = text.split(/([A-Za-z]+)/);
+  let flagged = 0;
+
+  const html = parts.map((part, i) => {
+    if (i % 2 === 0) return escapeHtml(part);
+    const entry = aoa[part.toLowerCase()];
+    if (entry && entry.aoa > 10.0) {
+      flagged++;
+      const label = entry.source === 'ecp_ai'
+        ? `AoA ${entry.aoa} (AI estimate)`
+        : `AoA ${entry.aoa}`;
+      return `<mark title="${label}" data-source="${entry.source}">${escapeHtml(part)}</mark>`;
+    }
+    return escapeHtml(part);
+  }).join('');
+
+  document.getElementById('output').innerHTML = html;
+
+  const words = parts.filter((_, i) => i % 2 === 1).length;
+  document.getElementById('status').textContent = words > 0
+    ? `${flagged} of ${words} words flagged (AoA > 10)`
+    : '';
+}
+
+document.getElementById('input').addEventListener('input', e => processInput(e.target.value));
+</script>
+
+</body>
+</html>
