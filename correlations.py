@@ -24,7 +24,12 @@ def steiger_z(r1, r2, r12, n):
 
 # Load data
 corpus = pd.read_csv("CLEAR_corpus_final.csv", encoding="latin-1")
-subtlex = pd.read_csv("SUBTLEX-UK.csv", encoding="latin-1")
+subtlex = pd.read_csv("SUBTLEX-UK.csv", encoding="latin-1", low_memory=False)
+aoa = pd.read_excel("AoA_51715_words.xlsx")
+aoa_map      = aoa.dropna(subset=["Word", "AoA_Kup_lem"]).set_index("Word")["AoA_Kup_lem"].to_dict()
+perc_map     = aoa.dropna(subset=["Word", "Perc_known"]).set_index("Word")["Perc_known"].to_dict()
+aoa_map      = {k.lower(): v for k, v in aoa_map.items()}
+perc_map     = {k.lower(): v for k, v in perc_map.items()}
 
 # Build Zipf lookup: lowercase word -> Zipf score
 subtlex["word"] = subtlex["Spelling"].str.lower()
@@ -52,14 +57,28 @@ def mean_zipf(tokens):
     return sum(scores) / len(scores) if scores else float("nan")
 
 # Compute features per excerpt (batch via nlp.pipe for speed)
-tokens_col = pd.Series(
+_docs = pd.Series(
     list(nlp.pipe(corpus["Excerpt"].astype(str), batch_size=64)),
     index=corpus.index,
-).map(lambda doc: [t.lemma_.lower() for t in doc if t.is_alpha])
+)
+tokens_col         = _docs.map(lambda doc: [t.lemma_.lower() for t in doc if t.is_alpha])
+content_tokens_col = _docs.map(lambda doc: [t.lemma_.lower() for t in doc
+                                             if t.is_alpha and t.pos_ in {"NOUN", "VERB", "ADJ", "ADV"}])
 corpus["cov_3k"]     = tokens_col.map(lambda t: coverage(t, top3k))
 corpus["cov_5k"]     = tokens_col.map(lambda t: coverage(t, top5k))
 corpus["cov_10k"]    = tokens_col.map(lambda t: coverage(t, top10k))
 corpus["mean_zipf"]  = tokens_col.map(mean_zipf)
+
+corpus["mean_aoa"]   = content_tokens_col.map(
+    lambda t: np.mean([aoa_map[w]  for w in t if w in aoa_map])  if any(w in aoa_map  for w in t) else float("nan")
+)
+corpus["mean_perc"]  = content_tokens_col.map(
+    lambda t: np.mean([perc_map[w] for w in t if w in perc_map]) if any(w in perc_map for w in t) else float("nan")
+)
+
+matched = content_tokens_col.map(lambda t: sum(w in aoa_map for w in t)).sum()
+total   = content_tokens_col.map(len).sum()
+print(f"Kuperman coverage: {matched/total:.1%} of content word lemma tokens matched ({matched:,}/{total:,})\n")
 
 # Spearman correlations against BT_easiness
 target = corpus["BT_easiness"]
@@ -69,6 +88,8 @@ measures = {
     "Coverage top-5k":     corpus["cov_5k"],
     "Coverage top-10k":    corpus["cov_10k"],
     "Mean Zipf":           corpus["mean_zipf"],
+    "Mean AoA":            corpus["mean_aoa"],
+    "Mean Perc Known":     corpus["mean_perc"],
 }
 
 rows = []
