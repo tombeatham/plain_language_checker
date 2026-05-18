@@ -89,6 +89,8 @@ y = corpus.loc[X.index, "BT_easiness"].dropna()
 X = X.loc[y.index]
 
 model = LinearRegression().fit(X, y)
+print(f"Coverage coefficient: {model.coef_[0]:.4f}")
+print(f"Sentence length coefficient: {model.coef_[1]:.4f}")
 predicted = model.predict(X)
 rho, p = spearmanr(predicted, y)
 print(f"\nSUBTLEX composite (coverage_5k + sent_length): rho={rho:.3f}, p={p:.2e}")
@@ -142,3 +144,14 @@ corpus["error_asymmetry"] = corpus["false_positives"] - corpus["false_negatives"
 
 rho, p = spearmanr(corpus["error_asymmetry"].dropna(), corpus.loc[corpus["error_asymmetry"].notna(), "BT_easiness"])
 print(f"\nError asymmetry vs BT_easiness: rho={rho:.3f}, p={p:.4f}")
+
+# Sentence length correlations
+sl_mask = corpus["sent_length"].notna()
+rho, p = spearmanr(corpus.loc[sl_mask, "sent_length"], corpus.loc[sl_mask, "cov_5k"])
+print(f"\nSentence length vs SUBTLEX coverage: rho={rho:.3f}, p={p:.4f}")
+
+rho2, p2 = spearmanr(corpus.loc[sl_mask, "sent_length"], corpus.loc[sl_mask, "Flesch-Reading-Ease"])
+print(f"Sentence length vs Flesch: rho={rho2:.3f}, p={p2:.4f}")
+
+rho3, p3 = spearmanr(corpus.loc[sl_mask, "sent_length"], corpus.loc[sl_mask, "BT_easiness"])
+print(f"Sentence length vs BT_easiness: rho={rho3:.3f}, p={p3:.4f}")
