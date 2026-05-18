@@ -1,5 +1,14 @@
 # Plain Language Checker — Project Context
 
+##General rules
+
+Claude Code rules (Karpathy)
+
+Ask, don't assume. If something is unclear, ask before writing a single line. Never make silent assumptions about intent, architecture, or requirements.
+Simplest solution first. Always implement the simplest thing that could work. Do not add abstractions or flexibility that weren't explicitly requested. The tool is a single HTML file — not a React app, not a build pipeline.
+Don't touch unrelated code. If a file or function is not directly part of the current task, do not modify it, even if you think it could be improved. This applies especially to correlations.py — add new sections, never rewrite existing ones.
+Flag uncertainty explicitly. If you are not confident about an approach or technical detail, say so before proceeding. Confidence without certainty causes more damage than admitting a gap.
+
 ## What this project is
 
 A plain language checking tool for administrative correspondence, specifically HOS (Housing Ombudsman Service) decisions. The tool flags words that are unfamiliar to general British English readers and suggests simpler alternatives.
@@ -12,7 +21,7 @@ The project has two components:
 
 ## Key finding
 
-Age of Acquisition (AoA, Kuperman et al. 2012) is the strongest predictor of human readability (rho=0.638 against CLEAR corpus BT_easiness scores, n=4,724). It significantly outperforms Flesch Reading Ease (rho=0.560, Steiger z=7.91, p<0.001) and SUBTLEX-UK coverage (rho=0.536).
+AoA + sentence length composite is the strongest predictor of human readability (rho=0.661 against CLEAR corpus BT_easiness scores, n=4,724; Steiger z=10.73 vs Flesch, p<0.001). AoA alone (rho=0.638) is the strongest single-measure predictor and significantly outperforms Flesch Reading Ease (rho=0.560, Steiger z=7.91, p<0.001) and SUBTLEX-UK coverage (rho=0.536).
 
 **The two measures serve different functions in the tool:**
 - **AoA** — flagging engine. Words with late acquisition age are highlighted for the writer.
@@ -32,15 +41,26 @@ Age of Acquisition (AoA, Kuperman et al. 2012) is the strongest predictor of hum
 
 | Measure | rho | R² |
 |---|---|---|
+| AoA + sentence length composite | 0.661 | 43.7% |
 | Mean AoA (Kuperman) | 0.638 | 40.7% |
 | SUBTLEX composite (coverage + sentence length) | 0.598 | 35.8% |
 | Flesch Reading Ease | 0.560 | 31.4% |
 | SUBTLEX coverage top-5k | 0.536 | 28.7% |
 | Mean Zipf | 0.410 | 16.8% |
 
-Composite beats Flesch: Steiger z=3.68, p<0.001  
+AoA composite beats Flesch: Steiger z=10.73, p<0.001  
+SUBTLEX composite beats Flesch: Steiger z=3.68, p<0.001  
 AoA beats Flesch: Steiger z=7.91, p<0.001  
 Adding Zipf to AoA adds nothing: Δrho=0.001 (AoA absorbs frequency signal entirely)
+
+### Standardised coefficients (AoA composite)
+
+| Predictor | Standardised coef | Share |
+|---|---|---|
+| Mean AoA | −0.614 | 76.5% |
+| Sentence length | −0.189 | 23.5% |
+
+AoA does three-quarters of the work. Sentence length adds meaningfully but the composite remains primarily an AoA measure.
 
 ### Genre split
 

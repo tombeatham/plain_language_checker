@@ -75,6 +75,9 @@ corpus["mean_aoa"]   = content_tokens_col.map(
 corpus["mean_perc"]  = content_tokens_col.map(
     lambda t: np.mean([perc_map[w] for w in t if w in perc_map]) if any(w in perc_map for w in t) else float("nan")
 )
+corpus["aoa_scores"] = content_tokens_col.map(
+    lambda t: [aoa_map[w] for w in t if w in aoa_map]
+)
 
 matched = content_tokens_col.map(lambda t: sum(w in aoa_map for w in t)).sum()
 total   = content_tokens_col.map(len).sum()
@@ -127,6 +130,40 @@ r12, _           = spearmanr(model.predict(aligned[["cov_5k", "sent_length"]]), 
 z, p_sz = steiger_z(rho_composite, rho_flesch, r12, n)
 print(f"\nSteiger Z (composite vs Flesch): z={z:.3f}, p={p_sz:.3f} (n={n})")
 
+# AoA + sentence length composite
+X_aoa = corpus[["mean_aoa", "sent_length"]].dropna()
+y_aoa = corpus.loc[X_aoa.index, "BT_easiness"].dropna()
+X_aoa = X_aoa.loc[y_aoa.index]
+
+model_aoa = LinearRegression().fit(X_aoa, y_aoa)
+predicted_aoa = model_aoa.predict(X_aoa)
+rho, p = spearmanr(predicted_aoa, y_aoa)
+print(f"\nAoA + sentence length composite: rho={rho:.3f}, p={p:.2e}")
+print(f"AoA coef: {model_aoa.coef_[0]:.4f}, sentence length coef: {model_aoa.coef_[1]:.4f}")
+
+# Steiger Z: AoA composite vs Flesch on the same aligned sample
+aligned_aoa = corpus[["BT_easiness", "Flesch-Reading-Ease", "mean_aoa", "sent_length"]].dropna()
+n_aoa = len(aligned_aoa)
+
+rho_aoa_comp, _ = spearmanr(model_aoa.predict(aligned_aoa[["mean_aoa", "sent_length"]]), aligned_aoa["BT_easiness"])
+rho_flesch_aoa, _ = spearmanr(aligned_aoa["Flesch-Reading-Ease"], aligned_aoa["BT_easiness"])
+r12_aoa, _ = spearmanr(model_aoa.predict(aligned_aoa[["mean_aoa", "sent_length"]]), aligned_aoa["Flesch-Reading-Ease"])
+
+z_aoa, p_aoa = steiger_z(rho_aoa_comp, rho_flesch_aoa, r12_aoa, n_aoa)
+print(f"\nSteiger Z (AoA composite vs Flesch): z={z_aoa:.3f}, p={p_aoa:.3f} (n={n_aoa})")
+
+# Standardised coefficients: relative contribution of each predictor
+aoa_std = X_aoa['mean_aoa'].std()
+sent_std = X_aoa['sent_length'].std()
+
+aoa_standardised = model_aoa.coef_[0] * aoa_std
+sent_standardised = model_aoa.coef_[1] * sent_std
+
+print(f"\nStandardised AoA coefficient: {aoa_standardised:.4f}")
+print(f"Standardised sentence length coefficient: {sent_standardised:.4f}")
+print(f"AoA share: {abs(aoa_standardised) / (abs(aoa_standardised) + abs(sent_standardised)):.1%}")
+print(f"Sentence length share: {abs(sent_standardised) / (abs(aoa_standardised) + abs(sent_standardised)):.1%}")
+
 # Per-category correlations
 def corr_table(df, label):
     target = df["BT_easiness"]
@@ -176,3 +213,17 @@ print(f"Sentence length vs Flesch: rho={rho2:.3f}, p={p2:.4f}")
 
 rho3, p3 = spearmanr(corpus.loc[sl_mask, "sent_length"], corpus.loc[sl_mask, "BT_easiness"])
 print(f"Sentence length vs BT_easiness: rho={rho3:.3f}, p={p3:.4f}")
+
+# Proportion of content words with AoA > 10 vs mean AoA vs BT_easiness
+corpus["prop_aoa_over_10"] = corpus.apply(
+    lambda row: sum(1 for w in row["aoa_scores"] if w > 10) / len(row["aoa_scores"])
+    if row["aoa_scores"] else None, axis=1
+)
+
+rho, p = spearmanr(corpus["prop_aoa_over_10"].dropna(),
+                   corpus.loc[corpus["prop_aoa_over_10"].notna(), "BT_easiness"])
+print(f"\nProportion AoA > 10 vs BT_easiness: rho={rho:.3f}, p={p:.2e}")
+
+rho2, p2 = spearmanr(corpus["mean_aoa"].dropna(),
+                     corpus.loc[corpus["mean_aoa"].notna(), "BT_easiness"])
+print(f"Mean AoA vs BT_easiness: rho={rho2:.3f}, p={p2:.2e}")

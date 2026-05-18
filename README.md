@@ -36,12 +36,13 @@ Tested against the CLEAR corpus (Crossley et al., 2022) — 4,724 texts with hum
 
 | Measure | Spearman rho | vs Flesch |
 |---|---|---|
+| AoA + sentence length composite | 0.661 | +0.101 ✓ |
 | Mean AoA (Kuperman) | 0.638 | +0.078 ✓ |
 | SUBTLEX composite | 0.598 | +0.038 ✓ |
 | Flesch Reading Ease | 0.560 | baseline |
 | SUBTLEX coverage top-5k | 0.536 | −0.024 |
 
-AoA significantly outperforms Flesch (Steiger z=7.91, p<0.001). On informative text specifically — the register closest to administrative correspondence — the gap widens further.
+The AoA + sentence length composite significantly outperforms Flesch (Steiger z=10.73, p<0.001). AoA alone also significantly outperforms Flesch (Steiger z=7.91, p<0.001). On informative text specifically — the register closest to administrative correspondence — the gap widens further.
 
 ### Honest limitations
 
