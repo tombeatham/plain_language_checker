@@ -22,9 +22,12 @@ corpus["cov_5k"] = tokens_col.map(
 )
 
 plot_df = corpus[["Flesch-Reading-Ease", "BT_easiness", "cov_5k"]].dropna()
+plot_df = plot_df[plot_df["Flesch-Reading-Ease"] >= 0]
 plot_df["quartile"] = pd.qcut(plot_df["cov_5k"], 4, labels=False)
 
-palette = ["#d0e4f7", "#7ab3d9", "#2e7fbf", "#0d3d6b"]
+# Dark = low familiarity (Q1), light = high familiarity (Q4)
+palette = ["#0d3d6b", "#2e7fbf", "#7ab3d9", "#d0e4f7"]
+labels = ["Low", "Mid-low", "Mid-high", "High"]
 
 fig, ax = plt.subplots(figsize=(7, 5))
 
@@ -37,13 +40,16 @@ for q in range(4):
         s=8,
         alpha=0.6,
         linewidths=0,
-        label=f"Q{q + 1}",
+        label=labels[q],
     )
 
 ax.set_xlabel("Flesch Reading Ease", fontsize=11)
 ax.set_ylabel("BT Easiness", fontsize=11)
-ax.legend(title="Coverage\n(top-5k quartile)", title_fontsize=9, fontsize=9,
+ax.legend(title="Familiar vocabulary", title_fontsize=9, fontsize=9,
           frameon=False, markerscale=2)
+
+ax.set_title("Each point is one of 4,724 texts rated by human teachers",
+             fontsize=9, color="#666666", pad=8)
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
