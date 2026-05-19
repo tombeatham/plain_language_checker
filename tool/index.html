@@ -87,8 +87,8 @@ let subtlex = null;
 document.getElementById('status').textContent = 'Loading word data…';
 
 Promise.all([
-  fetch('aoa_lookup.json').then(r => r.json()),
-  fetch('subtlex_top10k.json').then(r => r.json())
+  fetch('../data/aoa_lookup.json').then(r => r.json()),
+  fetch('../data/subtlex_top10k.json').then(r => r.json())
 ])
   .then(([aoaData, subtlexData]) => {
     aoa = aoaData;

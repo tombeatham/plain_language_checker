@@ -5,7 +5,7 @@ import pandas as pd
 import textstat
 
 # Load SUBTLEX
-subtlex = pd.read_csv("SUBTLEX-UK.csv", encoding="latin-1", low_memory=False)
+subtlex = pd.read_csv("../data/SUBTLEX-UK.csv", encoding="latin-1", low_memory=False)
 subtlex = subtlex.dropna(subset=["Spelling"])
 subtlex = subtlex.sort_values("LogFreq(Zipf)", ascending=False).reset_index(drop=True)
 subtlex["rank"] = subtlex.index + 1
@@ -13,7 +13,7 @@ zipf_map = subtlex.set_index("Spelling")["LogFreq(Zipf)"].to_dict()
 top5k = set(subtlex["Spelling"].str.lower().iloc[:5000])
 
 # Load HOS decisions
-hos = pd.read_csv("hos_decisions_v5.csv", encoding="latin-1")
+hos = pd.read_csv("../data/hos_decisions_v5.csv", encoding="latin-1")
 text = " ".join(hos["full_text"].dropna().astype(str))
 
 tokens = [t for t in re.findall(r"[a-z]+", text.lower()) if t.isalpha()]

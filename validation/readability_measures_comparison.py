@@ -7,9 +7,9 @@ from scipy.stats import spearmanr
 from sklearn.linear_model import LinearRegression
 
 # ── Data loading ───────────────────────────────────────────────────────────────
-corpus = pd.read_csv("CLEAR_corpus_final.csv", encoding="latin-1")
-subtlex = pd.read_csv("SUBTLEX-UK.csv", encoding="latin-1", low_memory=False)
-aoa_df = pd.read_excel("AoA_51715_words.xlsx")
+corpus = pd.read_csv("../data/CLEAR_corpus_final.csv", encoding="latin-1")
+subtlex = pd.read_csv("../data/SUBTLEX-UK.csv", encoding="latin-1", low_memory=False)
+aoa_df = pd.read_excel("../data/AoA_51715_words.xlsx")
 
 aoa_map = aoa_df.dropna(subset=["Word", "AoA_Kup_lem"]).set_index("Word")["AoA_Kup_lem"].to_dict()
 aoa_map = {k.lower(): v for k, v in aoa_map.items()}

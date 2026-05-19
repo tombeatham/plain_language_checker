@@ -4,8 +4,8 @@ import pandas as pd
 import spacy
 import textstat
 
-corpus = pd.read_csv("CLEAR_corpus_final.csv", encoding="latin-1")
-subtlex = pd.read_csv("SUBTLEX-UK.csv", encoding="latin-1", low_memory=False)
+corpus = pd.read_csv("../data/CLEAR_corpus_final.csv", encoding="latin-1")
+subtlex = pd.read_csv("../data/SUBTLEX-UK.csv", encoding="latin-1", low_memory=False)
 
 subtlex["word"] = subtlex["Spelling"].str.lower()
 subtlex_sorted = subtlex.sort_values("LogFreq(Zipf)", ascending=False).reset_index(drop=True)
