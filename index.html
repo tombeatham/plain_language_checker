@@ -9,12 +9,15 @@
     font-family: Georgia, serif;
     font-size: 17px;
     line-height: 1.7;
-    max-width: 800px;
+    max-width: 1100px;
     margin: 48px auto;
     padding: 0 24px;
     color: #222;
   }
   h1 { font-size: 1.2em; font-weight: normal; color: #666; margin-bottom: 24px; }
+  .container { display: flex; gap: 48px; align-items: flex-start; }
+  .left { flex: 1; min-width: 0; }
+  .right { width: 220px; flex-shrink: 0; padding-top: 4px; }
   textarea {
     width: 100%;
     height: 180px;
@@ -41,35 +44,58 @@
     padding: 0 1px;
     cursor: help;
   }
-  mark[data-source="ecp_ai"] { background: #fff3cd; }
   #status { margin-top: 10px; font-size: 0.85em; color: #888; }
+  .stat-block { margin-bottom: 32px; }
+  .stat-label { font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin-bottom: 2px; }
+  .stat-value { font-size: 2em; line-height: 1.2; color: #222; }
+  .stat-desc { font-size: 0.82em; color: #888; margin-top: 2px; }
 </style>
 </head>
 <body>
 
 <h1>Plain Language Checker</h1>
 
-<textarea id="input" placeholder="Paste text here…" spellcheck="false"></textarea>
-<div id="status"></div>
-<div id="output"></div>
+<div class="container">
+  <div class="left">
+    <textarea id="input" placeholder="Paste text here…" spellcheck="false"></textarea>
+    <div id="status"></div>
+    <div id="output"></div>
+  </div>
+  <div class="right">
+    <div class="stat-block">
+      <div class="stat-label">Document score</div>
+      <div class="stat-value" id="score-val">—</div>
+      <div class="stat-desc">of content words with AoA&nbsp;&gt;&nbsp;10</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-label">Long sentences</div>
+      <div class="stat-value" id="long-val">—</div>
+      <div class="stat-desc">sentences over 25 words</div>
+    </div>
+  </div>
+</div>
 
 <script>
 let aoa = null;
+let subtlex = null;
 
-fetch('aoa_lookup.json')
-  .then(r => r.json())
-  .then(data => {
-    aoa = data;
+document.getElementById('status').textContent = 'Loading word data…';
+
+Promise.all([
+  fetch('aoa_lookup.json').then(r => r.json()),
+  fetch('subtlex_top10k.json').then(r => r.json())
+])
+  .then(([aoaData, subtlexData]) => {
+    aoa = aoaData;
+    subtlex = subtlexData;
     document.getElementById('status').textContent = '';
     const input = document.getElementById('input');
     if (input.value) processInput(input.value);
   })
   .catch(() => {
     document.getElementById('status').textContent =
-      'Could not load aoa_lookup.json — run via a local server, not file://.';
+      'Could not load data files — run via a local server, not file://.';
   });
-
-document.getElementById('status').textContent = 'Loading word data…';
 
 function escapeHtml(str) {
   return str
@@ -79,29 +105,47 @@ function escapeHtml(str) {
 }
 
 function processInput(text) {
-  if (!aoa) return;
+  if (!aoa || !subtlex) return;
 
   const parts = text.split(/([A-Za-z]+)/);
   let flagged = 0;
+  let contentWords = 0;
 
   const html = parts.map((part, i) => {
     if (i % 2 === 0) return escapeHtml(part);
-    const entry = aoa[part.toLowerCase()];
-    if (entry && entry.aoa > 10.0) {
-      flagged++;
-      const label = entry.source === 'ecp_ai'
-        ? `AoA ${entry.aoa} (AI estimate)`
-        : `AoA ${entry.aoa}`;
-      return `<mark title="${label}" data-source="${entry.source}">${escapeHtml(part)}</mark>`;
+    const word = part.toLowerCase();
+    const aoaScore = aoa[word];
+    if (aoaScore !== undefined) {
+      contentWords++;
+      if (aoaScore > 10.0) {
+        flagged++;
+        let tip = `AoA: ${aoaScore.toFixed(1)}`;
+        const zipfScore = subtlex[word];
+        if (zipfScore !== undefined && zipfScore < 4.0) {
+          tip += ` | Zipf: ${zipfScore.toFixed(2)}`;
+        }
+        return `<mark title="${tip}">${escapeHtml(part)}</mark>`;
+      }
     }
     return escapeHtml(part);
   }).join('');
 
   document.getElementById('output').innerHTML = html;
 
-  const words = parts.filter((_, i) => i % 2 === 1).length;
-  document.getElementById('status').textContent = words > 0
-    ? `${flagged} of ${words} words flagged (AoA > 10)`
+  // Document score
+  document.getElementById('score-val').textContent = contentWords > 0
+    ? `${(flagged / contentWords * 100).toFixed(1)}%`
+    : '—';
+
+  // Long sentences (split on sentence-ending punctuation)
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const longCount = sentences.filter(s => s.trim().split(/\s+/).length > 25).length;
+  document.getElementById('long-val').textContent = text.trim().length > 0 ? longCount : '—';
+
+  // Status line
+  const total = parts.filter((_, i) => i % 2 === 1).length;
+  document.getElementById('status').textContent = total > 0
+    ? `${flagged} of ${total} words flagged (AoA > 10)`
     : '';
 }
 
