@@ -1,17 +1,17 @@
 # Plain Language Checker — Project Context
 
-##General rules
+## General rules
 
 Claude Code rules (Karpathy)
 
 Ask, don't assume. If something is unclear, ask before writing a single line. Never make silent assumptions about intent, architecture, or requirements.
 Simplest solution first. Always implement the simplest thing that could work. Do not add abstractions or flexibility that weren't explicitly requested. The tool is a single HTML file — not a React app, not a build pipeline.
-Don't touch unrelated code. If a file or function is not directly part of the current task, do not modify it, even if you think it could be improved. This applies especially to correlations.py — add new sections, never rewrite existing ones.
+Don't touch unrelated code. If a file or function is not directly part of the current task, do not modify it, even if you think it could be improved. This applies especially to validation/correlations.py — add new sections, never rewrite existing ones.
 Flag uncertainty explicitly. If you are not confident about an approach or technical detail, say so before proceeding. Confidence without certainty causes more damage than admitting a gap.
 
 ## What this project is
 
-A plain language checking tool for administrative correspondence, specifically HOS (Housing Ombudsman Service) decisions. The tool flags words that are unfamiliar to general British English readers and suggests simpler alternatives.
+A plain language checking tool for administrative correspondence, specifically HOS (Housing Ombudsman Service) decisions. The tool flags words that are unfamiliar to general British English readers.
 
 The project has two components:
 1. **Validation** — empirical work establishing which word familiarity measure best predicts human readability judgements
@@ -135,17 +135,17 @@ Study 1 covers only early-acquired words (AoA < 10) — all below the flagging t
 
 The ECP supplement adds **4,042 words not in Kuperman**, of which **334 appear in the CLEAR corpus with AoA > 10** (newly flaggable). Top examples: `moreover` (11.0), `nevertheless` (11.0), `consequently` (11.0), `comparatively` (11.0), `levy` (12.0), `stakeholder` (13.0).
 
-**Caution**: ECP AoA values cluster at round numbers (11.0, 12.0, 13.0) — the model rounds rather than producing calibrated estimates. Use these, but flag them as AI-generated in the tool data, separate from human-rated Kuperman values.
+**Caution**: ECP AoA values cluster at round numbers (11.0, 12.0, 13.0) — the model rounds rather than producing calibrated estimates. These are included in `aoa_lookup.json` alongside Kuperman values and are not separately distinguished in the tool.
 
 ---
 
 ## Tool architecture
 
-**Flagging**: Mean AoA of content word lemmas. Words above AoA threshold highlighted inline.  
-**Replacement**: SUBTLEX-UK Zipf-ranked alternatives for flagged words.  
-**Secondary signal**: Sentence length over 25 words flagged separately.  
+**Flagging**: Words with AoA > 10.0 highlighted inline; hover shows AoA score and Zipf for low-frequency words.  
+**Override**: `hos_override.json` — domain-specific terms flagged regardless of AoA rating.  
+**Secondary signal**: Sentences over 25 words flagged separately.  
 **Format**: Single-file HTML/JS. No server. Hostable on GitHub Pages.  
-**Data files**: `aoa_lookup.json` (Kuperman top entries) + `subtlex_top10k.json` (replacement suggestions)
+**Data files**: `data/aoa_lookup.json` · `data/subtlex_top10k.json` · `data/hos_override.json`
 
 ---
 
@@ -162,22 +162,34 @@ The ECP supplement adds **4,042 words not in Kuperman**, of which **334 appear i
 
 ```
 plain_language_checker/
-├── CLAUDE.md                                                              ← this file
-├── README.md                                                              ← public-facing summary
-├── correlations.py                                                        ← main validation script
-├── hos_false_positives.py                                                 ← HOS false positive/negative analysis
-├── scatter_plot.py                                                        ← scatter plot script
-├── scatter_flesch_bt.png                                                  ← scatter plot output
-├── scatter_flesch_bt.svg                                                  ← scatter plot output (SVG)
+├── CLAUDE.md                          ← this file
+├── README.md                          ← public-facing summary
 │
-├── CLEAR_corpus_final.csv                                                 ← validation corpus (CC BY-NC-SA, not in repo)
-├── SUBTLEX-UK.csv                                                         ← word frequency database (not in repo)
-├── hos_decisions_v5.csv                                                   ← HOS decisions corpus (not in repo)
+├── data/
+│   ├── aoa_lookup.json                ← Kuperman + ECP AoA scores (tool)
+│   ├── subtlex_top10k.json            ← SUBTLEX-UK top 10k Zipf scores (tool)
+│   ├── hos_override.json              ← domain-specific override terms (tool)
+│   ├── aoa_crowdsourced.json          ← Brysbaert 2025 Study 1 crowdsourced norms
+│   ├── CLEAR_corpus_final.csv         ← validation corpus (CC BY-NC-SA, not in repo)
+│   ├── SUBTLEX-UK.csv                 ← word frequency database (not in repo)
+│   ├── hos_decisions_v5.csv           ← HOS decisions corpus (not in repo)
+│   ├── AoA_51715_words.xlsx           ← Kuperman AoA ratings (not in repo)
+│   ├── AI_Generated_AoA_ECP.xlsx      ← Brysbaert 2025 ECP supplement (not in repo)
+│   └── AI_Generated_AoA_Kuperman_2012.xlsx ← Brysbaert 2025 Study 3 (not in repo)
 │
-├── AoA_51715_words.xlsx                                                   ← Kuperman AoA ratings (not in repo)
-├── Crowdsourced Print AoA Estimates for Earlier Acquired Vocabulary...xlsx ← Brysbaert 2025 Study 1, human-rated (not in repo)
-├── AI_Generated_AoA_Kuperman_2012.xlsx                                    ← Brysbaert 2025 Study 3, AI-generated (not in repo)
-└── AI_Generated_AoA_ECP.xlsx                                              ← Brysbaert 2025 ECP supplement, AI-generated (not in repo)
+├── validation/
+│   ├── correlations.py                ← main validation script
+│   ├── hos_false_positives.py         ← HOS false positive/negative analysis
+│   ├── scatter_plot.py                ← Flesch vs BT_easiness scatter
+│   ├── scatter_aoa_bt.py              ← AoA vs BT_easiness scatter
+│   ├── readability_measures_comparison.py
+│   ├── variance_explained.py
+│   ├── aoa_coverage.py                ← AoA coverage analysis for HOS corpus
+│   ├── check_ecp_coverage.py          ← ECP cross-reference script
+│   └── [chart outputs: .png / .svg]
+│
+└── tool/
+    └── index.html                     ← the tool
 ```
 
 ---
@@ -188,10 +200,10 @@ plain_language_checker/
 |---|---|---|---|
 | 1 | ✓ Done | Data prep | Clean datasets |
 | 2 | ✓ Done | Validation | Rho table, Steiger, AoA finding |
-| 3 | Next | Scatter plot | One chart: Flesch vs BT_easiness, coloured by AoA quartile |
-| 4 | — | JSON prep | aoa_lookup.json + subtlex_top10k.json |
-| 5 | — | Build tool | Single-file HTML with AoA flagging + SUBTLEX suggestions |
-| 6 | — | Article | Write up, link to tool |
+| 3 | ✓ Done | Scatter plots | Flesch vs BT_easiness, AoA vs BT_easiness, comparison charts |
+| 4 | ✓ Done | JSON prep | aoa_lookup.json + subtlex_top10k.json + hos_override.json |
+| 5 | ✓ Done | Build tool | Single-file HTML with AoA flagging + sentence length signal |
+| 6 | Next | Article | Write up, link to tool |
 | Future | — | HOS outcomes study | Correlate AoA scores of decisions against resident outcomes |
 
 ---
@@ -200,5 +212,4 @@ plain_language_checker/
 
 - Do not start a new session's work before completing the current one
 - Each session has one output — name it before starting
-- The distraction risk is highest after session 2 — resist building before the chart is done
 - Come back to this file at the start of each session to confirm which one you are in

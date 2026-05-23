@@ -48,13 +48,13 @@ The AoA + sentence length composite significantly outperforms Flesch (Steiger z=
 
 - No human-rated corpus of administrative prose exists. CLEAR is literary and informative text rated by teachers for student readers.
 - Kuperman AoA is American English. No British AoA database exists at scale. The divergence is modest for common vocabulary but real for some civic/political terms.
-- AoA covers approximately 96% of content word tokens in general prose. The remaining 4% is mostly adverbs, which Kuperman did not rate. A 2025 extension (Brysbaert et al.) adds AI-generated AoA estimates for a further 4,042 words via the English Crowdsourcing Project; 334 of these appear in the CLEAR corpus above the flagging threshold. These are used in the tool but flagged separately as AI-generated estimates.
+- AoA covers approximately 96% of content word tokens in HOS decisions. The remaining 4% is mostly adverbs, which Kuperman did not rate. A 2025 extension (Brysbaert et al.) adds AI-generated AoA estimates for a further 4,042 words via the English Crowdsourcing Project; 334 of these appear in the CLEAR corpus above the flagging threshold and are included in the tool.
 
 ## How it works
 
 1. Paste or type text into the editor
 2. Words above the AoA threshold are highlighted inline
-3. Hover for the AoA score and suggested SUBTLEX-UK alternatives
+3. Hover for AoA score; low-frequency words also show Zipf score
 4. Sentence length over 25 words flagged separately
 5. Document-level score shown in the sidebar
 
@@ -63,6 +63,7 @@ No server. No data sent anywhere. Works offline once loaded.
 ## Data sources
 
 - **Kuperman et al. (2012)**: Age-of-acquisition ratings for 30,000 English words. *Behavior Research Methods*, 44(4), 978–990.
+- **Brysbaert et al. (2025)**: Crowdsourced and AI-generated age-of-acquisition norms for vocabulary in print. *Behavior Research Methods*.
 - **van Heuven et al. (2014)**: SUBTLEX-UK: A new and improved word frequency database for British English. *Quarterly Journal of Experimental Psychology*, 67(6), 1176–1190.
 - **Crossley et al. (2022)**: A large-scaled corpus for assessing text readability. *Behavior Research Methods*, 55, 491–507.
 
@@ -70,11 +71,12 @@ No server. No data sent anywhere. Works offline once loaded.
 
 | File | Description |
 |---|---|
-| `correlations.py` | Validation script — reproduces all results above |
-| `CLEAR_corpus_final.csv` | Validation corpus (CC BY-NC-SA, not redistributed here) |
-| `aoa_lookup.json` | AoA scores for tool use |
-| `subtlex_top10k.json` | SUBTLEX-UK top 10k for replacement suggestions |
-| `index.html` | The tool |
+| `tool/index.html` | The tool |
+| `data/aoa_lookup.json` | Kuperman + ECP AoA scores |
+| `data/subtlex_top10k.json` | SUBTLEX-UK top 10k Zipf scores |
+| `data/hos_override.json` | Domain-specific override terms |
+| `validation/correlations.py` | Validation script — reproduces all results above |
+| `data/CLEAR_corpus_final.csv` | Validation corpus (CC BY-NC-SA, not redistributed here) |
 
 ## Future work
 
