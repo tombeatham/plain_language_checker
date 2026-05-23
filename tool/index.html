@@ -83,16 +83,19 @@
 <script>
 let aoa = null;
 let subtlex = null;
+let override = null;
 
 document.getElementById('status').textContent = 'Loading word data…';
 
 Promise.all([
   fetch('../data/aoa_lookup.json').then(r => r.json()),
-  fetch('../data/subtlex_top10k.json').then(r => r.json())
+  fetch('../data/subtlex_top10k.json').then(r => r.json()),
+  fetch('../data/hos_override.json').then(r => r.json())
 ])
-  .then(([aoaData, subtlexData]) => {
+  .then(([aoaData, subtlexData, overrideData]) => {
     aoa = aoaData;
     subtlex = subtlexData;
+    override = overrideData;
     document.getElementById('status').textContent = '';
     const input = document.getElementById('input');
     if (input.value) processInput(input.value);
@@ -110,7 +113,7 @@ function escapeHtml(str) {
 }
 
 function processInput(text) {
-  if (!aoa || !subtlex) return;
+  if (!aoa || !subtlex || !override) return;
 
   let totalFlagged = 0;
   let totalContent = 0;
@@ -131,9 +134,13 @@ function processInput(text) {
     const inner = tokens.map((token, j) => {
       if (j % 2 === 0) return escapeHtml(token);
       const word = token.toLowerCase();
-      const aoaScore = aoa[word];
+      const aoaScore = word in override ? override[word] : aoa[word];
       if (aoaScore !== undefined) {
         totalContent++;
+        if (aoaScore === null) {
+          totalFlagged++;
+          return `<mark title="Specialist term (AoA not rated)">${escapeHtml(token)}</mark>`;
+        }
         if (aoaScore > 10.0) {
           totalFlagged++;
           let tip = `AoA: ${aoaScore.toFixed(1)}`;
