@@ -44,6 +44,8 @@ Decomposing the composite reveals something important: AoA does 76.5% of the wor
 
 ![Variance in human readability ratings explained by each measure. AoA-based measures explain substantially more than Flesch.](../validation/variance_explained.png)
 
+*Full methods — text processing, normalisation, and the statistical tests — are in the [technical appendix](methods.md).*
+
 ## What this looks like in practice
 
 Ombudsman decisions contain a predictable vocabulary that Flesch systematically misclassifies. Consider the words that appear most frequently across Housing Ombudsman, LGSCO, and PHSO decisions.
