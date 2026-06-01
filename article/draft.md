@@ -62,6 +62,8 @@ Kuperman's norms are American English. No equivalent British database exists at 
 
 Rated AoA is not developmental fact. Participants recalled when they felt they learned each word; that is a measure of perceived familiarity, not acquisition tracked in real time. The two correlate but are not identical.
 
+The gold standard for plain language is testing with real readers — asking people from the intended audience to read a document and tell you where they struggle. No formula substitutes for that. What automated measures offer is something different: a way to approximate difficulty at scale, to flag candidates for revision before a document reaches a reader, and to track change over time. Used as a diagnostic rather than a verdict, a well-validated measure is genuinely useful. Used as a substitute for reader testing, any measure — including this one — will mislead.
+
 ## The larger point
 
 Flesch became the standard because it was computable before computers existed. In 1948, that was an achievement. The formula has persisted not because subsequent research validated it for administrative writing — no such research was done — but because it was already there.
