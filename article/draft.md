@@ -30,6 +30,8 @@ To compare AoA against Flesch, the analysis used the CLEAR corpus (Crossley et a
 
 The question was simple: which measure predicts those human ratings better?
 
+![Six readability measures plotted against human ratings for 4,724 texts. AoA composite and mean AoA show the tightest relationship.](../validation/readability_measures_comparison.png)
+
 | Measure | Correlation with human ratings | Variance explained |
 |---|---|---|
 | AoA + sentence length | rho = 0.661 | 43.7% |
@@ -39,6 +41,8 @@ The question was simple: which measure predicts those human ratings better?
 The difference between the AoA composite and Flesch is statistically significant: Steiger z = 10.73, p < 0.001. On informative text — the genre closest to administrative correspondence — the gap widens further.
 
 Decomposing the composite reveals something important: AoA does 76.5% of the work; sentence length contributes 23.5%. The signal in Flesch's formula is almost entirely its sentence length term. The syllable count term adds noise.
+
+![Variance in human readability ratings explained by each measure. AoA-based measures explain substantially more than Flesch.](../validation/variance_explained.png)
 
 ## What this looks like in practice
 
