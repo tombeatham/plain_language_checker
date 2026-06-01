@@ -203,7 +203,7 @@ plain_language_checker/
 | 3 | ✓ Done | Scatter plots | Flesch vs BT_easiness, AoA vs BT_easiness, comparison charts |
 | 4 | ✓ Done | JSON prep | aoa_lookup.json + subtlex_top10k.json + hos_override.json |
 | 5 | ✓ Done | Build tool | Single-file HTML with AoA flagging + sentence length signal |
-| 6 | Next | Article | Write up, link to tool |
+| 6 | ✓ Done | Article | draft.md (essay) + methods.md (technical appendix), cross-linked |
 | Future | — | HOS outcomes study | Correlate AoA scores of decisions against resident outcomes |
 
 ---
