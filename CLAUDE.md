@@ -25,7 +25,7 @@ AoA + sentence length composite is the strongest predictor of human readability 
 
 **The two measures serve different functions in the tool:**
 - **AoA** — flagging engine. Words with late acquisition age are highlighted for the writer.
-- **SUBTLEX-UK** — replacement engine. When a word is flagged, SUBTLEX-UK provides ranked British English alternatives sorted by Zipf score.
+- **SUBTLEX-UK** — tooltip signal. When a flagged word also has Zipf < 4.0, the tooltip shows the Zipf score as a secondary low-frequency indicator. Replacement suggestions (ranked alternatives by Zipf score) were considered but not implemented — requires further work.
 
 ---
 

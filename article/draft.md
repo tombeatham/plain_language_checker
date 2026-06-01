@@ -1,0 +1,81 @@
+# A Readability Measure That Works
+
+The word "ombudsman" has an Age of Acquisition of 16.62. The average native English speaker learns it at sixteen. The body whose name it is exists to protect people who cannot get justice elsewhere — people who are, by definition, at the end of their options. And the word for what they have come to is one they will likely never have encountered before.
+
+This is the kind of thing a readability check should catch. The standard one does not.
+
+## The formula
+
+Flesch Reading Ease was published in 1948. Rudolf Flesch was working at a time when readability research meant counting by hand, and he needed a proxy for word difficulty that was quick to measure. He chose syllables. Long words are hard, short words are easy — the intuition is defensible, and for its era, the formula was a genuine advance.
+
+That era was seventy-five years ago. The formula has not been seriously re-examined since.
+
+The Flesch score is calculated from two inputs: average words per sentence and average syllables per word. Sentence length is a real signal — longer sentences impose a higher working memory load, and that effect is well established. But syllable count is a surface feature of a word, not a measure of how familiar it is to readers. The two are correlated, loosely. They are not the same thing.
+
+The difference is systematic. "Responsibility" has six syllables and a frequency rank of 4.9 on the standard British English scale — it sits among the most common words in the language. Flesch penalises it. "Distress" has two syllables. Flesch passes it. Among the 15,683 Housing Ombudsman decisions in this analysis, "distress" appears 60,692 times. Among 29 Local Government and Social Care Ombudsman decisions, it appears 117 times — roughly four per decision. In a sample of Parliamentary and Health Service Ombudsman decisions, it appears in every upheld case reviewed. In every instance, it describes what the complainant experienced. It is also, on average, a word people first learn at age eleven.
+
+Flesch never flags it.
+
+## What Age of Acquisition measures
+
+Age of Acquisition ratings were developed by psycholinguists studying how vocabulary is built. Kuperman et al. (2012) asked hundreds of native English speakers to rate 51,694 words: at what age do you feel you first learned this word? The results were averaged to produce a norm for each word.
+
+This is not the same as tracking actual acquisition longitudinally — these are retrospective judgements, subject to memory effects. But that is also precisely why they are useful for readability. They capture perceived familiarity: how well does the average adult reader feel they know this word? That is a closer approximation of reading difficulty than counting its syllables.
+
+AoA and word frequency capture different things. Their correlation is moderate (rho = −0.48). A word can be frequent but late-acquired — "commission", "austerity", "coalition", "referendum" appear constantly in public discourse but are typically learned in adolescence or later. Frequency counts their appearances; AoA catches that readers may still find them opaque.
+
+## Testing the hypothesis
+
+To compare AoA against Flesch, the analysis used the CLEAR corpus (Crossley et al., 2022): 4,724 texts rated for reading ease by trained teachers. This is a human-judgement criterion — texts that teachers found harder to read scored lower; texts they found easier scored higher.
+
+The question was simple: which measure predicts those human ratings better?
+
+| Measure | Correlation with human ratings | Variance explained |
+|---|---|---|
+| AoA + sentence length | rho = 0.661 | 43.7% |
+| AoA alone | rho = 0.638 | 40.7% |
+| Flesch Reading Ease | rho = 0.560 | 31.4% |
+
+The difference between the AoA composite and Flesch is statistically significant: Steiger z = 10.73, p < 0.001. On informative text — the genre closest to administrative correspondence — the gap widens further.
+
+Decomposing the composite reveals something important: AoA does 76.5% of the work; sentence length contributes 23.5%. The signal in Flesch's formula is almost entirely its sentence length term. The syllable count term adds noise.
+
+## What this looks like in practice
+
+Ombudsman decisions contain a predictable vocabulary that Flesch systematically misclassifies. Consider the words that appear most frequently across Housing Ombudsman, LGSCO, and PHSO decisions.
+
+"Maladministration" appears in 95.8% of Housing Ombudsman decisions. It has no Age of Acquisition rating — it predates the survey instruments — but it does not appear in the top 10,000 most frequent British English words. Flesch penalises it for its syllables, which is the right answer reached by the wrong reasoning.
+
+"Injustice" appears 14 times in a four-decision PHSO sample and 369 times across 29 LGSCO decisions. Its AoA is 10.89; it is outside the top 10,000 most frequent words in British English. It is the central concept of what the PHSO investigates — and a word that most readers will first encounter well into secondary school.
+
+"Distress" and "injustice" frequently appear in the same sentence: *"We recognise this caused Mr G and his family significant worry and distress."* Neither would trouble Flesch for its syllables. Both are acquired, on average, after the age of ten.
+
+"Granted" appears 18 times in the same four PHSO decisions — *"was granted leave to remain"*, *"was granted funding"*. Two syllables, AoA 12.0. Invisible to Flesch. A reader encountering the word in a legal context for the first time may not have the concept fully mapped.
+
+The pattern is consistent across three different ombudsman bodies, different complaint categories, and different decision types. It is not an artefact of one organisation's drafting style.
+
+## Limitations
+
+This analysis has honest limits. The CLEAR corpus is literary and informative text rated by teachers for student readers — not adults reading official correspondence. No human-rated corpus of administrative prose exists; if it did, the correlation figures would likely look different.
+
+Kuperman's norms are American English. No equivalent British database exists at scale. For most common vocabulary the divergence is modest; for politically specific terms — "coalition", "constituency", "devolution" — it may not be.
+
+Rated AoA is not developmental fact. Participants recalled when they felt they learned each word; that is a measure of perceived familiarity, not acquisition tracked in real time. The two correlate but are not identical.
+
+## The larger point
+
+Flesch became the standard because it was computable before computers existed. In 1948, that was an achievement. The formula has persisted not because subsequent research validated it for administrative writing — no such research was done — but because it was already there.
+
+The analysis here follows a straightforward logic: identify the assumed standard, specify what it should predict, test it against a criterion, compare it against an alternative. The alternative performed significantly better. That is not a surprising result — it would have been surprising if a syllable count from 1948 had turned out to be the optimal measure of reading difficulty. What is worth noting is that the question had not been asked.
+
+A readability measure should predict whether readers find a text difficult. The one in common use predicts it less well than a measure built on how people actually learn words. For organisations whose correspondence reaches people at their most stressed and least resourced, that gap is not a technical footnote.
+
+---
+
+## References
+
+- Crossley, S. A., Heintz, A., Choi, J. S., Batchelor, J., Karimi, M., & Malatinszky, A. (2022). A large-scaled corpus for assessing text readability. *Behavior Research Methods*, 55, 491–507.
+- Flesch, R. (1948). A new readability yardstick. *Journal of Applied Psychology*, 32(3), 221–233.
+- Kuperman, V., Stadthagen-Gonzalez, H., & Brysbaert, M. (2012). Age-of-acquisition ratings for 30,000 English words. *Behavior Research Methods*, 44(4), 978–990.
+- Brysbaert, M. et al. (2025). Crowdsourced and AI-generated age-of-acquisition norms for vocabulary in print: Extending the Kuperman et al. (2012) norms. *Behavior Research Methods*. https://pmc.ncbi.nlm.nih.gov/articles/PMC12500800/
+- van Heuven, W. J. B., Mandera, P., Keuleers, E., & Brysbaert, M. (2014). SUBTLEX-UK: A new and improved word frequency database for British English. *Quarterly Journal of Experimental Psychology*, 67(6), 1176–1190.
