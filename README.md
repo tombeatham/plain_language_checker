@@ -60,6 +60,18 @@ The AoA + sentence length composite significantly outperforms Flesch (Steiger z=
 
 No server. No data sent anywhere. Works offline once loaded.
 
+**Tokenising rules.** Hyphenated compounds are split and each part scored separately; internal apostrophes are stripped for lookup so contractions and possessives do not produce stray tokens. A capitalised word that is not in the SUBTLEX top 10k is treated as a proper noun and not scored, unless it opens a sentence (where the capital is grammatical). Override terms are always scored, so domain words such as `ASB` are flagged even when capitalised. Documents under 20 content words show no document score, as the percentage is unreliable on very short text.
+
+## Batch scoring
+
+`score_decisions.py` applies the same AoA engine to a spreadsheet, one row per decision, for corpus-scale work such as the HOS outcomes study. It appends score columns and writes a new file.
+
+```
+python score_decisions.py --text-column "Decision Text" --input decisions.csv [--output output/]
+```
+
+Alongside the tool's flag percentage (`aoa_score_pct`) it reports `mean_aoa` and `avg_sentence_length` — the two components of the validated composite — plus the flagged word list per row. Run it from the repo root so it can find `data/aoa_lookup.json` and `data/hos_override.json`.
+
 ## Data sources
 
 - **Kuperman et al. (2012)**: Age-of-acquisition ratings for 30,000 English words. *Behavior Research Methods*, 44(4), 978–990.
@@ -72,6 +84,7 @@ No server. No data sent anywhere. Works offline once loaded.
 | File | Description |
 |---|---|
 | `tool/index.html` | The tool |
+| `score_decisions.py` | Batch scorer — applies the AoA engine to a spreadsheet of decisions |
 | `data/aoa_lookup.json` | Kuperman + ECP AoA scores |
 | `data/subtlex_top10k.json` | SUBTLEX-UK top 10k Zipf scores |
 | `data/hos_override.json` | Domain-specific override terms |
@@ -81,7 +94,7 @@ No server. No data sent anywhere. Works offline once loaded.
 ## Future work
 
 - British AoA norms — the ideal foundation for this tool does not yet exist
-- HOS outcomes study — correlate AoA scores of Housing Ombudsman decisions against resident outcome data (resolution rates, satisfaction, escalation)
+- HOS outcomes study — correlate AoA scores of Housing Ombudsman decisions against resident outcome data (resolution rates, satisfaction, escalation). `score_decisions.py` provides the bulk scoring this needs
 - Pre/post editing study — demonstrate that AoA-guided edits improve human preference ratings while Flesch scores do not reliably follow
 
 ## Related article

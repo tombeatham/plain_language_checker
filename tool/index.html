@@ -85,6 +85,8 @@ let aoa = null;
 let subtlex = null;
 let override = null;
 
+const MIN_CONTENT_WORDS = 20;
+
 document.getElementById('status').textContent = 'Loading word data…';
 
 Promise.all([
@@ -130,28 +132,53 @@ function processInput(text) {
     const isLong = wordCount > 25;
     if (isLong && part.trim().length > 0) longCount++;
 
-    const tokens = part.split(/([A-Za-z]+)/);
+    // Capture word tokens including internal hyphens/apostrophes so "co-operative"
+    // and "don't" stay whole for display; even indices are the separators between.
+    const tokens = part.split(/([A-Za-z]+(?:['’\-][A-Za-z]+)*)/);
+    let firstWordSeen = false;
     const inner = tokens.map((token, j) => {
       if (j % 2 === 0) return escapeHtml(token);
-      const word = token.toLowerCase();
-      const aoaScore = word in override ? override[word] : aoa[word];
-      if (aoaScore !== undefined) {
-        totalContent++;
-        if (aoaScore === null) {
-          totalFlagged++;
-          return `<mark title="Specialist term (AoA not rated)">${escapeHtml(token)}</mark>`;
+      const isSentenceStart = !firstWordSeen;
+      firstWordSeen = true;
+
+      // Principled hyphen splitting: score each component of a compound separately.
+      let flaggedTip = null;
+      for (const comp of token.split('-')) {
+        if (!comp) continue;
+        const key = comp.toLowerCase().replace(/['’]/g, '');
+        if (!key) continue;
+
+        let score;
+        if (key in override) {
+          score = override[key];          // domain override always scores
+        } else {
+          // Proper-noun exclusion: a capitalised word not in the SUBTLEX top 10k
+          // is treated as a name and not scored — unless it opens the sentence,
+          // where the capital is grammatical rather than a proper noun.
+          if (/^[A-Z]/.test(comp) && !isSentenceStart && !(key in subtlex)) continue;
+          if (!(key in aoa)) continue;    // not a rated content word
+          score = aoa[key];
         }
-        if (aoaScore > 10.0) {
+
+        totalContent++;
+        if (score === null) {
           totalFlagged++;
-          let tip = `AoA: ${aoaScore.toFixed(1)}`;
-          const zipfScore = subtlex[word];
-          if (zipfScore !== undefined && zipfScore < 4.0) {
-            tip += ` | Zipf: ${zipfScore.toFixed(2)}`;
+          if (flaggedTip === null) flaggedTip = 'Specialist term (AoA not rated)';
+        } else if (score > 10.0) {
+          totalFlagged++;
+          if (flaggedTip === null) {
+            flaggedTip = `AoA: ${score.toFixed(1)}`;
+            const zipfScore = subtlex[key];
+            if (zipfScore !== undefined && zipfScore < 4.0) {
+              flaggedTip += ` | Zipf: ${zipfScore.toFixed(2)}`;
+            }
           }
-          return `<mark title="${tip}">${escapeHtml(token)}</mark>`;
         }
       }
-      return escapeHtml(token);
+
+      return flaggedTip !== null
+        ? `<mark title="${flaggedTip}">${escapeHtml(token)}</mark>`
+        : escapeHtml(token);
     }).join('');
 
     return isLong
@@ -161,15 +188,20 @@ function processInput(text) {
 
   document.getElementById('output').innerHTML = html;
 
-  document.getElementById('score-val').textContent = totalContent > 0
+  document.getElementById('score-val').textContent = totalContent >= MIN_CONTENT_WORDS
     ? `${(totalFlagged / totalContent * 100).toFixed(1)}%`
     : '—';
   document.getElementById('long-val').textContent = text.trim().length > 0 ? longCount : '—';
 
   const totalWords = (text.match(/[A-Za-z]+/g) || []).length;
-  document.getElementById('status').textContent = totalWords > 0
-    ? `${totalFlagged} of ${totalWords} words flagged (AoA > 10)`
-    : '';
+  let status = '';
+  if (totalWords > 0) {
+    status = `${totalFlagged} of ${totalWords} words flagged (AoA > 10)`;
+    if (totalContent > 0 && totalContent < MIN_CONTENT_WORDS) {
+      status += ` — too short for a reliable score (needs ${MIN_CONTENT_WORDS}+ content words)`;
+    }
+  }
+  document.getElementById('status').textContent = status;
 }
 
 document.getElementById('input').addEventListener('input', e => processInput(e.target.value));
