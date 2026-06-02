@@ -147,6 +147,14 @@ The ECP supplement adds **4,042 words not in Kuperman**, of which **334 appear i
 **Format**: Single-file HTML/JS. No server. Hostable on GitHub Pages.  
 **Data files**: `data/aoa_lookup.json` · `data/subtlex_top10k.json` · `data/hos_override.json`
 
+**Tokenising rules** (tool and `score_decisions.py` share this logic):
+- Hyphenated compounds are split on the hyphen and each component scored separately.
+- Internal apostrophes are stripped for lookup (`don't`, `tenant's`), so contractions and possessives do not leave stray single-letter tokens.
+- Proper-noun exclusion: a capitalised token whose lowercase is absent from the SUBTLEX top 10k is treated as a name and not scored. Lookup order is **override → proper-noun check → AoA**, so override terms (`ASB`) are flagged even when capitalised. Sentence-initial words are exempt from the exclusion, since the capital there is grammatical, not a proper noun. Residual limitation: a rare flaggable word capitalised mid-sentence and absent from the override list is dropped — the inherent cost of the capital-letter heuristic (inherited from the Word corpus scorer).
+- Documents under 20 content words show no document score; the percentage is unreliable on very short text.
+
+**Batch scorer** (`score_decisions.py`): a Python port of the tool's AoA engine onto the `scorer_rows.py` spreadsheet harness from the Word corpus project. Scores a `.csv`/`.xlsx` one row per decision and appends `aoa_score_pct`, `mean_aoa`, `avg_sentence_length`, `long_sentence_count`, `content_word_count`, `flagged_word_count`, `total_words`, and `flagged_words`. Built for the HOS outcomes study. Run from the repo root.
+
 ---
 
 ## Key citations
@@ -164,6 +172,7 @@ The ECP supplement adds **4,042 words not in Kuperman**, of which **334 appear i
 plain_language_checker/
 ├── CLAUDE.md                          ← this file
 ├── README.md                          ← public-facing summary
+├── score_decisions.py                 ← batch scorer (AoA engine on spreadsheet harness)
 │
 ├── data/
 │   ├── aoa_lookup.json                ← Kuperman + ECP AoA scores (tool)
