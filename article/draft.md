@@ -18,6 +18,8 @@ Flesch never flags it.
 
 ## What Age of Acquisition measures
 
+If syllable count is the wrong ruler, the question is what the right one measures. Not how a word is built, but when it is learned.
+
 Age of Acquisition ratings were developed by psycholinguists studying how vocabulary is built. Kuperman et al. (2012) asked hundreds of native English speakers to rate 51,694 words: at what age do you feel you first learned this word? The results were averaged to produce a norm for each word.
 
 This is not the same as tracking actual acquisition longitudinally — these are retrospective judgements, subject to memory effects. But that is also precisely why they are useful for readability. They capture perceived familiarity: how well does the average adult reader feel they know this word? That is a closer approximation of reading difficulty than counting its syllables.
@@ -54,11 +56,19 @@ Ombudsman decisions contain a predictable vocabulary that Flesch systematically 
 
 "Injustice" appears 14 times in a four-decision PHSO sample and 369 times across 29 LGSCO decisions. Its AoA is 10.89; it is outside the top 10,000 most frequent words in British English. It is the central concept of what the PHSO investigates — and a word that most readers will first encounter well into secondary school.
 
-"Distress" and "injustice" frequently appear in the same sentence: *"We recognise this caused Mr G and his family significant worry and distress."* Neither would trouble Flesch for its syllables. Both are acquired, on average, after the age of ten.
+The same "distress" returns here alongside "injustice", the two often sharing a sentence: *"We recognise this caused Mr G and his family significant worry and distress."* Neither troubles Flesch for its syllables; both are first learned, on average, at around eleven. They are the words that carry what the complaint is *about* — and the formula waves both through.
 
 "Granted" appears 18 times in the same four PHSO decisions — *"was granted leave to remain"*, *"was granted funding"*. Two syllables, AoA 12.0. Invisible to Flesch. A reader encountering the word in a legal context for the first time may not have the concept fully mapped.
 
 The pattern is consistent across three different ombudsman bodies, different complaint categories, and different decision types. It is not an artefact of one organisation's drafting style.
+
+## Why not something more sophisticated?
+
+The obvious objection is that better-resourced tools exist. They do. Coh-Metrix, developed by the same research group behind the CLEAR corpus, scores text across roughly twenty-eight dimensions — lexical sophistication, cohesion, syntactic complexity, diversity, even sentiment and cognition. It is a far more elaborate instrument than a single acquisition-age lookup.
+
+But it is an academic research tool, not something a housing officer can open in a browser. Using it means institutional access; the large language models that could do comparable work mean an API key and a cost per run; consumer editors like Hemingway apply rules they do not publish. And none of them is transparent — when they flag a passage, they cannot tell the writer, in terms she can act on, *why*.
+
+That last point is the one that matters here. A measure used to revise public correspondence has to be inspectable: the writer needs to see that "injustice" was flagged because it is learned at eleven, not because an opaque score dropped. The checker described here is open source, free to run, and works offline in a single file; its validation against the CLEAR corpus is public, so anyone can reproduce the numbers or contest them. It is not the most powerful readability measure available. It is the most accountable one — and for documents that decide whether a person understands the answer they have been given, accountability is the property worth optimising for.
 
 ## Limitations
 
