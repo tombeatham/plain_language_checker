@@ -95,6 +95,7 @@ Alongside the tool's flag percentage (`aoa_score_pct`) it reports `mean_aoa` and
 
 - British AoA norms — the ideal foundation for this tool does not yet exist
 - HOS outcomes study — correlate AoA scores of Housing Ombudsman decisions against resident outcome data (resolution rates, satisfaction, escalation). `score_decisions.py` provides the bulk scoring this needs
+- Replacement suggestions — suggest a plainer alternative for each flagged word, not just the flag. Design options (curated map vs WordNet vs hybrid; tooltip vs click panel) are worked through in CLAUDE.md
 - Pre/post editing study — demonstrate that AoA-guided edits improve human preference ratings while Flesch scores do not reliably follow
 
 ## Related article

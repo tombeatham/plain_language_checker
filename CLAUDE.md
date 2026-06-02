@@ -166,6 +166,33 @@ The ECP supplement adds **4,042 words not in Kuperman**, of which **334 appear i
 
 ---
 
+## Possible extension: replacement suggestions (designed, not built)
+
+The tool flags hard words but does not yet suggest plainer alternatives. This is the largest unbuilt feature. Design space and what is known about each option, so a future session need not re-derive it:
+
+### Source of suggestions — where the alternatives come from
+
+| Option | What it is | Pros | Cons |
+|---|---|---|---|
+| **Curated HOS map** *(recommended)* | Hand-vetted JSON, `word → [alternatives]`, covering the common HOS offenders. e.g. `"redress": ["compensation", "a remedy"]`, `"commence": ["start", "begin"]`, `"undertake": ["do", "carry out"]`. ~100–200 entries. | Every suggestion human-checked, so nothing off-register or wrong-sense reaches a public tool. Defensible. Fits the single-file ethos (just another data file like `hos_override.json`). Can grow incrementally. | Only covers listed words; no help for the long tail. |
+| **WordNet automatic** | Look up synonyms for any flagged word, rank by AoA/Zipf, surface the most familiar. | Broad, automatic coverage. | Word-sense disambiguation problem — can suggest the wrong meaning (`distress` the emotion vs the maritime signal). Register often mismatched. Embarrassing in an official-correspondence tool. Bundles a WordNet dataset (MBs), breaking the tiny-single-file property. |
+| **Hybrid** | Curated map authoritative; WordNet fallback for words not in the map. | Best coverage. | Most code and moving parts; carries the WordNet risk for everything outside the curated set. |
+
+**Ranking principle (all options):** a suggested alternative should itself sit below the AoA > 10 threshold, otherwise it is not actually plainer. Rank candidates by AoA (ascending), break ties by Zipf (descending). This keeps the feature consistent with the tool's own measure.
+
+### Display — how a suggestion surfaces
+
+| Option | What it is | Pros | Cons |
+|---|---|---|---|
+| **Append to hover tooltip** *(recommended)* | Add to the existing AoA `title` hover, e.g. `title="AoA: 12.0 | try: failure, mistake"`. | Simplest; reuses the current hover pattern; no new UI. | Read-only — cannot click to apply the replacement. |
+| **Click-to-expand panel** | Click a flagged word to open a small panel listing alternatives; optionally click one to replace it in the textarea. | Interactive; can apply edits in place. | Meaningfully more JS; must mutate textarea content and re-run scoring. |
+
+**Recommendation on record:** curated map + tooltip append. Simplest, safest, fits the single-file tool, and the list can grow over time. The curated map is also a natural by-product of the existing `validation/hos_false_positives.py` work — the words it surfaces are exactly the ones needing alternatives.
+
+**Per CLAUDE.md rules**, confirm source and display choice before building — both materially change the work.
+
+---
+
 ## Repository structure
 
 ```
