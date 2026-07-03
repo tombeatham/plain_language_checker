@@ -24,7 +24,7 @@ for word, freq in counts.most_common():
     syl = textstat.syllable_count(word)
     in_top5k = word in top5k
     zipf = zipf_map.get(word)
-    row = {"word": word, "freq_in_hos": freq, "syllables": syl, "zipf": round(zipf, 2) if zipf else None}
+    row = {"word": word, "freq_in_hos": freq, "syllables": syl, "zipf": round(zipf, 2) if zipf is not None else None}
     if syl >= 3 and in_top5k:
         fp_rows.append(row)
     elif syl <= 2 and not in_top5k:

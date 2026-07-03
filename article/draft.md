@@ -20,7 +20,7 @@ Flesch never flags it.
 
 If syllable count is the wrong ruler, the question is what a better one would measure: not how a word is built, but when it is learned.
 
-Age of Acquisition ratings were developed by psycholinguists studying how vocabulary is built. Kuperman et al. (2012) asked hundreds of native English speakers to rate 51,694 words: at what age do you feel you first learned this word? The results were averaged to produce a norm for each word.
+Age of Acquisition ratings were developed by psycholinguists studying how vocabulary is built. Kuperman et al. (2012) asked hundreds of native English speakers to rate more than 30,000 words: at what age do you feel you first learned this word? The results were averaged to produce a norm for each word; keyed across inflected forms, the norms cover 51,694 words.
 
 This is not the same as tracking actual acquisition over time — these are retrospective judgements, subject to memory effects. But that is also why they are useful for readability. They capture perceived familiarity: how well does the average adult reader feel they know this word? That is a closer approximation of reading difficulty than counting its syllables.
 

@@ -133,21 +133,21 @@ A 2025 paper extends the Kuperman norms. Three files are in the repo:
 
 Study 1 covers only early-acquired words (AoA < 10) — all below the flagging threshold, so no new flaggable words.
 
-The ECP supplement adds **4,042 words not in Kuperman**, of which **334 appear in the CLEAR corpus with AoA > 10** (newly flaggable). Top examples: `moreover` (11.0), `nevertheless` (11.0), `consequently` (11.0), `comparatively` (11.0), `levy` (12.0), `stakeholder` (13.0).
+The ECP supplement adds **3,994 words not in Kuperman**, of which **334 appear in the CLEAR corpus with AoA > 10** (newly flaggable). Top examples: `moreover` (11.0), `nevertheless` (11.0), `consequently` (11.0), `comparatively` (11.0), `levy` (12.0), `stakeholder` (13.0). All 3,994 are merged into `aoa_lookup.json`: the 176 HOS-frequent words via `validation/update_aoa_from_ecp.py`, the remaining 3,818 via `validation/merge_ecp_all.py`.
 
-**Caution**: ECP AoA values cluster at round numbers (11.0, 12.0, 13.0) — the model rounds rather than producing calibrated estimates. These are included in `aoa_lookup.json` alongside Kuperman values and are not separately distinguished in the tool.
+**Caution**: ECP AoA values cluster at round numbers (11.0, 12.0, 13.0) — the model rounds rather than producing calibrated estimates. They sit alongside Kuperman values in `aoa_lookup.json` and are not separately distinguished in the tool.
 
 ---
 
 ## Tool architecture
 
 **Flagging**: Words with AoA > 10.0 highlighted inline; hover shows AoA score and Zipf for low-frequency words.  
-**Override**: `hos_override.json` — domain-specific terms flagged regardless of AoA rating.  
+**Override**: `hos_override.json` — HOS-frequent words missing from Kuperman, looked up before `aoa_lookup.json`. Entries with a `null` value are specialist terms flagged unconditionally; entries with an AoA value (mostly ECP-scored adverbs) behave like ordinary lookup entries and flag only above threshold.  
 **Secondary signal**: Sentences over 25 words flagged separately.  
 **Format**: Single-file HTML/JS. No server. Hostable on GitHub Pages.  
 **Data files**: `data/aoa_lookup.json` · `data/subtlex_top10k.json` · `data/hos_override.json`
 
-**Tokenising rules** (tool and `score_decisions.py` share this logic):
+**Tokenising rules** (the tool only — `score_decisions.py` shares the flag rule and per-occurrence counting but tokenises on plain `[A-Za-z]+` runs, with no apostrophe stripping and no proper-noun exclusion):
 - Hyphenated compounds are split on the hyphen and each component scored separately.
 - Internal apostrophes are stripped for lookup (`don't`, `tenant's`), so contractions and possessives do not leave stray single-letter tokens.
 - Proper-noun exclusion: a capitalised token whose lowercase is absent from the SUBTLEX top 10k is treated as a name and not scored. Lookup order is **override → proper-noun check → AoA**, so override terms (`ASB`) are flagged even when capitalised. Sentence-initial words are exempt from the exclusion, since the capital there is grammatical, not a proper noun. Residual limitation: a rare flaggable word capitalised mid-sentence and absent from the override list is dropped — the inherent cost of the capital-letter heuristic (inherited from the Word corpus scorer).

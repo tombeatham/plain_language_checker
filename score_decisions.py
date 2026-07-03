@@ -5,12 +5,21 @@ Batch port of the single-document tool in tool/index.html. Scores each row of a
 spreadsheet with the same Age-of-Acquisition flagging logic the tool uses, and
 writes the results back as appended columns in a new spreadsheet.
 
-Flagging (identical to the tool):
+Flag rule (identical to the tool):
   - A token [A-Za-z]+ is a CONTENT word if it appears in hos_override.json or
     aoa_lookup.json.
   - A content word is FLAGGED if its value is null (specialist term, not rated)
     or its AoA is > 10.0 (later than end of primary school).
+  - Counting is per occurrence, as in the tool: aoa_score_pct is flagged
+    occurrences over content-word occurrences. flagged_words lists each
+    distinct flagged word once.
   - A sentence is LONG if it has more than 25 words.
+  - Rows under 20 content words get no aoa_score_pct or mean_aoa (unreliable
+    on very short text); the raw counts are still reported.
+
+Tokenisation is simpler than the tool's: plain [A-Za-z]+ runs, no apostrophe
+stripping and no proper-noun exclusion, so capitalised names whose lowercase
+form has an AoA rating are scored here but skipped by the tool.
 
 In addition to the tool's document score it reports mean AoA and average
 sentence length — the two components of the validated composite (rho=0.661
@@ -57,6 +66,7 @@ def load_json_map(path: Path) -> dict:
 
 class Score(NamedTuple):
     content: int          # content words (found in override or aoa)
+    flagged_count: int    # flagged occurrences (each repeat counts, as in the tool)
     flagged: list[str]    # distinct flagged words, sorted
     mean_aoa: float       # mean AoA over rated content words
     avg_sentence_length: float
@@ -64,8 +74,9 @@ class Score(NamedTuple):
     total_words: int
 
 
-def score_text(text: str, aoa: dict, override: dict) -> Score | None:
+def score_text(text: str, aoa: dict, override: dict) -> Score:
     flagged: set[str] = set()
+    flagged_count = 0
     aoa_values: list[float] = []
     content = 0
 
@@ -81,26 +92,25 @@ def score_text(text: str, aoa: dict, override: dict) -> Score | None:
 
         content += 1
         if value is None:
-            flagged.add(word)            # specialist term, not rated
+            flagged_count += 1           # specialist term, not rated
+            flagged.add(word)
         else:
             aoa_values.append(value)
             if value > AOA_THRESHOLD:
+                flagged_count += 1
                 flagged.add(word)
 
-    if content < MIN_CONTENT_WORDS:
-        return None
-
     sentences = [s for s in _SENT_SPLIT_RE.split(text) if s.strip()]
-    long_sentences = sum(
-        1 for s in sentences if len(s.split()) > LONG_SENTENCE_WORDS
-    )
+    sentence_lengths = [len(s.split()) for s in sentences]
+    long_sentences = sum(1 for n in sentence_lengths if n > LONG_SENTENCE_WORDS)
     avg_sentence_length = (
-        round(len(tokens) / len(sentences), 1) if sentences else 0.0
+        round(sum(sentence_lengths) / len(sentences), 1) if sentences else 0.0
     )
     mean_aoa = round(sum(aoa_values) / len(aoa_values), 2) if aoa_values else 0.0
 
     return Score(
         content=content,
+        flagged_count=flagged_count,
         flagged=sorted(flagged),
         mean_aoa=mean_aoa,
         avg_sentence_length=avg_sentence_length,
@@ -111,15 +121,19 @@ def score_text(text: str, aoa: dict, override: dict) -> Score | None:
 
 def score_row(text: str, aoa: dict, override: dict) -> dict:
     result = score_text(str(text), aoa, override)
-    if result is None:
-        return {col: None for col in SCORE_COLS}
+    # Percentage and mean are unreliable under 20 content words; the raw
+    # counts are still reported.
+    reliable = result.content >= MIN_CONTENT_WORDS
     return {
-        "aoa_score_pct": round(len(result.flagged) / result.content * 100, 1),
-        "mean_aoa": result.mean_aoa,
+        "aoa_score_pct": (
+            round(result.flagged_count / result.content * 100, 1)
+            if reliable else None
+        ),
+        "mean_aoa": result.mean_aoa if reliable else None,
         "avg_sentence_length": result.avg_sentence_length,
         "long_sentence_count": result.long_sentences,
         "content_word_count": result.content,
-        "flagged_word_count": len(result.flagged),
+        "flagged_word_count": result.flagged_count,
         "total_words": result.total_words,
         "flagged_words": "|".join(result.flagged),
     }
@@ -194,14 +208,17 @@ def main() -> None:
     output_df = pd.concat([df, results_df], axis=1)
 
     output_path = output_dir / input_path.name
+    if output_path.exists():
+        print(f"Note: overwriting existing {output_path}")
     write_spreadsheet(output_df, output_path)
 
     scored = len(df) - skipped
     print(f"Scored {scored} rows, skipped {skipped} "
           f"(fewer than {MIN_CONTENT_WORDS} content words).")
     if scored:
+        scored_rows = results_df[results_df["aoa_score_pct"].notna()]
         for col in ["aoa_score_pct", "mean_aoa", "avg_sentence_length"]:
-            print(f"  Mean {col}: {results_df[col].mean():.2f}")
+            print(f"  Mean {col}: {scored_rows[col].mean():.2f}")
     print(f"\nResults written to {output_path}")
 
 

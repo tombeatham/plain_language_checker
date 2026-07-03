@@ -28,7 +28,7 @@ Flesch Reading Ease uses syllable count as a proxy for word difficulty. This pro
 
 This tool uses **Age of Acquisition** (Kuperman et al., 2012) as the primary familiarity measure — the age at which a word is typically learned. Words acquired later in life are harder for general readers, regardless of how many syllables they have.
 
-For suggested replacements, the tool uses **SUBTLEX-UK** (van Heuven et al., 2014) — word frequencies derived from British television subtitles — to rank alternatives by familiarity to British English speakers.
+As a secondary signal, the tool uses **SUBTLEX-UK** (van Heuven et al., 2014) — word frequencies derived from British television subtitles. When a flagged word is also low-frequency (Zipf below 4.0), its tooltip shows the Zipf score alongside the AoA rating.
 
 ## Validation
 
@@ -48,7 +48,7 @@ The AoA + sentence length composite significantly outperforms Flesch (Steiger z=
 
 - No human-rated corpus of administrative prose exists. CLEAR is literary and informative text rated by teachers for student readers.
 - Kuperman AoA is American English. No British AoA database exists at scale. The divergence is modest for common vocabulary but real for some civic/political terms.
-- AoA covers approximately 96% of content word tokens in HOS decisions. The remaining 4% is mostly adverbs, which Kuperman did not rate. A 2025 extension (Brysbaert et al.) adds AI-generated AoA estimates for a further 4,042 words via the English Crowdsourcing Project; 334 of these appear in the CLEAR corpus above the flagging threshold and are included in the tool.
+- AoA covers approximately 96% of content word tokens in HOS decisions. The remaining 4% is mostly adverbs, which Kuperman did not rate. A 2025 extension (Brysbaert et al.) adds AI-generated AoA estimates for a further 3,994 words via the English Crowdsourcing Project, all included in the tool; 334 of these appear in the CLEAR corpus above the flagging threshold.
 
 ## How it works
 

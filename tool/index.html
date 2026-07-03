@@ -196,7 +196,7 @@ function processInput(text) {
   const totalWords = (text.match(/[A-Za-z]+/g) || []).length;
   let status = '';
   if (totalWords > 0) {
-    status = `${totalFlagged} of ${totalWords} words flagged (AoA > 10)`;
+    status = `${totalFlagged} of ${totalWords} words flagged (AoA > 10 or unrated specialist term)`;
     if (totalContent > 0 && totalContent < MIN_CONTENT_WORDS) {
       status += ` — too short for a reliable score (needs ${MIN_CONTENT_WORDS}+ content words)`;
     }
